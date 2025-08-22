@@ -3,30 +3,89 @@
   <head>
     <meta charset="UTF-8" />
     <title>Haunted Roast Bot 👻</title>
-    <link rel="stylesheet" href="style.css" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @keyframes glitch {
+        0% { text-shadow: 0 0 5px #ff0000; }
+        25% { text-shadow: -2px 0 #ff0000, 2px 0 #ff6666; }
+        50% { text-shadow: 2px 0 #ff0000, -2px 0 #ff6666; }
+        75% { text-shadow: -1px 0 #ff0000, 1px 0 #ff6666; }
+        100% { text-shadow: 0 0 5px #ff0000; }
+      }
+      
+      .glitch {
+        animation: glitch 2s infinite;
+      }
+      
+      .moon {
+        width: 700px;
+        height: 700px;
+        background-image: url('redmoon.jpg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        border-radius: 50%;
+        position: absolute;
+        left: -320px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+      
+      .stars {
+        background-image: 
+          radial-gradient(1px 1px at 50px 50px, rgba(255,255,255,0.8), transparent),
+          radial-gradient(1px 1px at 150px 120px, rgba(255,255,255,0.6), transparent),
+          radial-gradient(2px 2px at 300px 80px, rgba(255,255,255,0.4), transparent),
+          radial-gradient(1px 1px at 400px 200px, rgba(255,255,255,0.7), transparent),
+          radial-gradient(1px 1px at 550px 150px, rgba(255,255,255,0.5), transparent);
+        background-repeat: repeat;
+        background-size: 600px 300px;
+      }
+      
+      .message {
+        text-shadow: 0 0 10px currentColor;
+      }
+      
+      .chat-container {
+        backdrop-filter: blur(10px);
+        background: rgba(0, 0, 0, 0.8);
+      }
+    </style>
   </head>
-  <body class="flex flex-col items-center justify-center h-screen">
-    <div class="max-w-lg w-full bg-black/70 p-6 rounded-2xl shadow-2xl border border-red-900">
-      <h1 id="ghostName" class="text-2xl font-bold glitch text-red-500 text-center mb-4">
-        👻 Connecting to the other side...
-      </h1>
+  <body class="min-h-screen bg-black stars flex overflow-hidden" style="background-color: #000000;">
+    <!-- Left Side - Moon and Sky -->
+    <div class="flex-1 relative flex items-center justify-start overflow-hidden" style="background-color: #000000;">
+      <div class="moon"></div>
+    </div>
 
-      <div id="chatBox" class="h-80 overflow-y-auto bg-black/50 p-3 rounded-lg border border-gray-700 mb-4"></div>
+    <!-- Right Side - Chat Interface -->
+    <div class="flex-1 flex items-center justify-center p-8">
+      <div class="max-w-lg w-full chat-container p-6 rounded-2xl shadow-2xl border border-red-900">
+        <h1 id="ghostName" class="text-2xl font-bold glitch text-red-500 text-center mb-4">
+          👻 Connecting to the other side...
+        </h1>
 
-      <div class="flex gap-2">
-        <input
-          id="userInput"
-          type="text"
-          placeholder="Say something..."
-          class="flex-1 p-2 rounded-lg bg-gray-900 border border-gray-600 text-white"
-        />
-        <button
-          onclick="sendMessage()"
-          class="px-4 py-2 bg-red-600 hover:bg-red-800 rounded-lg"
-        >
-          Send
-        </button>
+        <div id="chatBox" class="h-80 overflow-y-auto bg-black/70 p-3 rounded-lg border border-gray-700 mb-4 scrollbar-thin scrollbar-thumb-red-600 scrollbar-track-gray-800">
+          <div class="text-center text-gray-500 text-sm mb-4">
+            🕯️ The spirits are gathering... 🕯️
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <input
+            id="userInput"
+            type="text"
+            placeholder="Speak to the spirits..."
+            class="flex-1 p-2 rounded-lg bg-gray-900/80 border border-gray-600 text-white placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+            onkeypress="if(event.key==='Enter') sendMessage()"
+          />
+          <button
+            onclick="sendMessage()"
+            class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200 text-white font-medium shadow-lg hover:shadow-red-500/25"
+          >
+            👻 Send
+          </button>
+        </div>
       </div>
     </div>
 
@@ -35,42 +94,80 @@
       let ghost = "";
 
       async function initGhost() {
-        const res = await fetch(`${API_BASE}/ghost`);
-        const data = await res.json();
-        ghost = data.ghost;
-        document.getElementById("ghostName").innerText = `💀 You are speaking with: ${ghost}`;
+        try {
+          const res = await fetch(`${API_BASE}/ghost`);
+          const data = await res.json();
+          ghost = data.ghost;
+          document.getElementById("ghostName").innerText = `💀 You are speaking with: ${ghost}`;
+        } catch (error) {
+          ghost = "The Phantom Roaster";
+          document.getElementById("ghostName").innerText = `💀 You are speaking with: ${ghost}`;
+          appendMessage("system", "🌙 Connection to spirit realm established... but the connection is ethereal...");
+        }
       }
 
       function appendMessage(sender, text) {
         const chatBox = document.getElementById("chatBox");
         const div = document.createElement("div");
-        div.className = sender === "you" ? "text-right mb-2" : "text-left mb-2";
-        div.innerHTML = `<span class="message ${
-          sender === "ghost" ? "text-red-400" : "text-gray-200"
-        }"><b>${sender}:</b> ${text}</span>`;
+        div.className = sender === "you" ? "text-right mb-3" : sender === "system" ? "text-center mb-3" : "text-left mb-3";
+        
+        let senderColor = "text-gray-200";
+        let senderIcon = "";
+        
+        if (sender === "ghost") {
+          senderColor = "text-red-400";
+          senderIcon = "👻";
+        } else if (sender === "you") {
+          senderColor = "text-blue-400";
+          senderIcon = "🧿";
+        } else if (sender === "system") {
+          senderColor = "text-purple-400";
+          senderIcon = "🔮";
+        }
+        
+        div.innerHTML = `<span class="message ${senderColor}"><b>${senderIcon} ${sender}:</b> ${text}</span>`;
         chatBox.appendChild(div);
         chatBox.scrollTop = chatBox.scrollHeight;
       }
 
       async function sendMessage() {
-  const input = document.getElementById("userInput");
-  const msg = input.value.trim();
-  if (!msg) return;
-  appendMessage("you", msg);
-  input.value = "";
+        const input = document.getElementById("userInput");
+        const msg = input.value.trim();
+        if (!msg) return;
+        
+        appendMessage("you", msg);
+        input.value = "";
 
-  const res = await fetch(`${API_BASE}/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: msg }),
-  });
+        try {
+          const res = await fetch(`${API_BASE}/chat`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: msg }),
+          });
 
-  const data = await res.json();
-  appendMessage(ghost, data.reply); 
-}
+          const data = await res.json();
+          appendMessage("ghost", data.reply);
+        } catch (error) {
+          // Fallback response when API is not available
+          const spookyResponses = [
+            "The spirits are restless... they sense your presence... 👻",
+            "From beyond the veil, I sense... confusion in your mortal words... 💀",
+            "The ethereal realm grows cold when you speak such things... 🌙",
+            "Even in death, I find your statement... questionably amusing... 🦇",
+            "The phantom winds whisper... 'that's not quite right, mortal...' ⚰️"
+          ];
+          const randomResponse = spookyResponses[Math.floor(Math.random() * spookyResponses.length)];
+          setTimeout(() => appendMessage("ghost", randomResponse), 1000);
+        }
+      }
 
-
+      // Initialize the ghost connection
       initGhost();
+      
+      // Add some atmospheric startup messages
+      setTimeout(() => {
+        appendMessage("system", "🕯️ The candles flicker as spirits gather... 🕯️");
+      }, 2000);
     </script>
   </body>
 </html>
