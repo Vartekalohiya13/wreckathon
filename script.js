@@ -30,17 +30,18 @@ function appendMessage(sender, text) {
   let senderIcon = "";
 
   if (sender === "ghost") {
-    const ghostName = window.currentGhost || "👻";
-    div.innerHTML = `<span class="message ${senderColor}"><b>${ghostName}:</b> ${text}</span>`;
-  } else if (sender === "you") {
-    senderColor = "text-blue-400";
-    senderIcon = "🧿";
-    div.innerHTML = `<span class="message ${senderColor}"><b>${senderIcon} You:</b> ${text}</span>`;
-  } else if (sender === "system") {
-    senderColor = "text-purple-400";
-    senderIcon = "🔮";
-    div.innerHTML = `<span class="message ${senderColor}"><b>${senderIcon} System:</b> ${text}</span>`;
-  }
+  div.classList.add("bot-bubble");
+  const ghostName = window.currentGhost || "👻";
+  div.innerHTML = `<b>${ghostName}:</b> <span class="typing-text">${text}</span>`;
+} else if (sender === "you") {
+  div.classList.add("user-bubble");
+  div.innerHTML = `<b>🧿 You:</b> <span class="typing-text">${text}</span>`;
+} else if (sender === "system") {
+  div.classList.add("system-bubble");
+  div.innerHTML = `<span class="typing-text">${text}</span>`;
+}
+
+
 
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
@@ -84,6 +85,9 @@ async function sendMessage() {
     setTimeout(() => appendMessage("ghost", randomResponse), 500);
   }
 }
+
+
+
 
 // Initialize connection
 initGhost();
